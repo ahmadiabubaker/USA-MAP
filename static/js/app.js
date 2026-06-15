@@ -9,59 +9,7 @@
 // STATE DATA — Realistic sample data for all 50 states + DC
 // ============================================================
 
-const STATE_DATA = {
-    "01": { name: "Alabama", abbr: "AL", population: 5024279, density: 99.2, growth: -0.3, medianIncome: 53913, unemployment: 3.1, crimeRate: 453, violentCrime: 453, propertyCrime: 2387, gradRate: 89.3, perPupil: 10249, avgTemp: 63.4, precip: 56.2, aqi: 42, disasters: 38, broadband: 78.2, uninsured: 10.1, costOfLiving: 88.1 },
-    "02": { name: "Alaska", abbr: "AK", population: 733391, density: 1.3, growth: -0.5, medianIncome: 77790, unemployment: 4.8, crimeRate: 838, violentCrime: 838, propertyCrime: 2826, gradRate: 80.1, perPupil: 18394, avgTemp: 28.1, precip: 22.5, aqi: 28, disasters: 15, broadband: 82.5, uninsured: 12.8, costOfLiving: 127.2 },
-    "04": { name: "Arizona", abbr: "AZ", population: 7151502, density: 63.5, growth: 1.4, medianIncome: 62055, unemployment: 3.7, crimeRate: 474, violentCrime: 474, propertyCrime: 2573, gradRate: 79.5, perPupil: 9319, avgTemp: 67.3, precip: 13.6, aqi: 58, disasters: 22, broadband: 84.7, uninsured: 10.8, costOfLiving: 103.2 },
-    "05": { name: "Arkansas", abbr: "AR", population: 3011524, density: 58.3, growth: 0.1, medianIncome: 48952, unemployment: 3.5, crimeRate: 641, violentCrime: 641, propertyCrime: 2929, gradRate: 88.2, perPupil: 10653, avgTemp: 60.4, precip: 50.6, aqi: 40, disasters: 42, broadband: 73.1, uninsured: 9.1, costOfLiving: 86.9 },
-    "06": { name: "California", abbr: "CA", population: 39538223, density: 256.4, growth: -0.3, medianIncome: 78672, unemployment: 4.8, crimeRate: 442, violentCrime: 442, propertyCrime: 2286, gradRate: 84.5, perPupil: 14174, avgTemp: 59.4, precip: 22.2, aqi: 62, disasters: 65, broadband: 89.4, uninsured: 7.2, costOfLiving: 142.2 },
-    "08": { name: "Colorado", abbr: "CO", population: 5773714, density: 56.5, growth: 1.0, medianIncome: 77127, unemployment: 3.1, crimeRate: 423, violentCrime: 423, propertyCrime: 2874, gradRate: 81.7, perPupil: 12390, avgTemp: 45.1, precip: 15.9, aqi: 48, disasters: 28, broadband: 89.1, uninsured: 7.1, costOfLiving: 105.1 },
-    "09": { name: "Connecticut", abbr: "CT", population: 3605944, density: 745.6, growth: 0.1, medianIncome: 78444, unemployment: 4.1, crimeRate: 181, violentCrime: 181, propertyCrime: 1451, gradRate: 89.0, perPupil: 21252, avgTemp: 49.0, precip: 50.3, aqi: 38, disasters: 12, broadband: 91.3, uninsured: 5.7, costOfLiving: 112.8 },
-    "10": { name: "Delaware", abbr: "DE", population: 989948, density: 508.0, growth: 0.6, medianIncome: 69110, unemployment: 4.4, crimeRate: 424, violentCrime: 424, propertyCrime: 2276, gradRate: 87.6, perPupil: 16394, avgTemp: 55.3, precip: 45.7, aqi: 42, disasters: 8, broadband: 87.4, uninsured: 6.4, costOfLiving: 102.4 },
-    "11": { name: "District of Columbia", abbr: "DC", population: 689545, density: 11515.0, growth: -2.3, medianIncome: 90842, unemployment: 5.2, crimeRate: 812, violentCrime: 812, propertyCrime: 3738, gradRate: 69.2, perPupil: 24120, avgTemp: 56.6, precip: 40.8, aqi: 44, disasters: 3, broadband: 92.8, uninsured: 3.8, costOfLiving: 148.7 },
-    "12": { name: "Florida", abbr: "FL", population: 21538187, density: 410.5, growth: 1.6, medianIncome: 57703, unemployment: 3.1, crimeRate: 384, violentCrime: 384, propertyCrime: 1928, gradRate: 86.9, perPupil: 10543, avgTemp: 71.7, precip: 54.5, aqi: 38, disasters: 72, broadband: 85.0, uninsured: 13.2, costOfLiving: 102.8 },
-    "13": { name: "Georgia", abbr: "GA", population: 10711908, density: 187.4, growth: 0.7, medianIncome: 61980, unemployment: 3.2, crimeRate: 380, violentCrime: 380, propertyCrime: 2348, gradRate: 83.7, perPupil: 11642, avgTemp: 63.5, precip: 50.7, aqi: 44, disasters: 35, broadband: 83.9, uninsured: 13.4, costOfLiving: 93.4 },
-    "15": { name: "Hawaii", abbr: "HI", population: 1455271, density: 226.6, growth: -0.3, medianIncome: 83102, unemployment: 3.4, crimeRate: 254, violentCrime: 254, propertyCrime: 2885, gradRate: 85.8, perPupil: 15242, avgTemp: 75.0, precip: 63.7, aqi: 22, disasters: 14, broadband: 89.8, uninsured: 4.2, costOfLiving: 193.3 },
-    "16": { name: "Idaho", abbr: "ID", population: 1839106, density: 22.5, growth: 2.1, medianIncome: 60999, unemployment: 2.9, crimeRate: 227, violentCrime: 227, propertyCrime: 1426, gradRate: 82.1, perPupil: 8508, avgTemp: 44.4, precip: 18.9, aqi: 42, disasters: 18, broadband: 81.2, uninsured: 10.1, costOfLiving: 96.8 },
-    "17": { name: "Illinois", abbr: "IL", population: 12812508, density: 232.0, growth: -0.8, medianIncome: 68428, unemployment: 4.5, crimeRate: 410, violentCrime: 410, propertyCrime: 1666, gradRate: 87.2, perPupil: 16227, avgTemp: 51.8, precip: 39.2, aqi: 46, disasters: 40, broadband: 86.8, uninsured: 6.8, costOfLiving: 93.4 },
-    "18": { name: "Indiana", abbr: "IN", population: 6785528, density: 189.4, growth: 0.1, medianIncome: 58235, unemployment: 3.2, crimeRate: 382, violentCrime: 382, propertyCrime: 1901, gradRate: 86.3, perPupil: 10989, avgTemp: 52.0, precip: 42.4, aqi: 44, disasters: 25, broadband: 83.7, uninsured: 8.4, costOfLiving: 90.4 },
-    "19": { name: "Iowa", abbr: "IA", population: 3190369, density: 57.1, growth: -0.1, medianIncome: 61836, unemployment: 2.7, crimeRate: 287, violentCrime: 287, propertyCrime: 1668, gradRate: 91.8, perPupil: 12375, avgTemp: 47.8, precip: 35.9, aqi: 38, disasters: 32, broadband: 84.6, uninsured: 5.0, costOfLiving: 89.0 },
-    "20": { name: "Kansas", abbr: "KS", population: 2937880, density: 36.2, growth: 0.0, medianIncome: 62087, unemployment: 2.8, crimeRate: 405, violentCrime: 405, propertyCrime: 2403, gradRate: 88.4, perPupil: 11925, avgTemp: 54.3, precip: 29.8, aqi: 36, disasters: 34, broadband: 83.0, uninsured: 8.9, costOfLiving: 88.8 },
-    "21": { name: "Kentucky", abbr: "KY", population: 4505836, density: 114.4, growth: 0.1, medianIncome: 52238, unemployment: 4.1, crimeRate: 234, violentCrime: 234, propertyCrime: 1614, gradRate: 90.6, perPupil: 11826, avgTemp: 55.6, precip: 49.9, aqi: 46, disasters: 38, broadband: 78.8, uninsured: 5.6, costOfLiving: 90.9 },
-    "22": { name: "Louisiana", abbr: "LA", population: 4657757, density: 108.8, growth: -0.7, medianIncome: 49469, unemployment: 4.1, crimeRate: 639, violentCrime: 639, propertyCrime: 2706, gradRate: 81.4, perPupil: 12231, avgTemp: 66.4, precip: 60.1, aqi: 44, disasters: 55, broadband: 77.6, uninsured: 8.1, costOfLiving: 91.1 },
-    "23": { name: "Maine", abbr: "ME", population: 1362359, density: 44.2, growth: 0.2, medianIncome: 57918, unemployment: 3.9, crimeRate: 109, violentCrime: 109, propertyCrime: 1286, gradRate: 87.7, perPupil: 15086, avgTemp: 41.0, precip: 47.3, aqi: 26, disasters: 12, broadband: 82.2, uninsured: 8.0, costOfLiving: 113.8 },
-    "24": { name: "Maryland", abbr: "MD", population: 6177224, density: 636.1, growth: 0.0, medianIncome: 87063, unemployment: 3.9, crimeRate: 454, violentCrime: 454, propertyCrime: 1876, gradRate: 87.1, perPupil: 16184, avgTemp: 54.7, precip: 42.2, aqi: 44, disasters: 15, broadband: 90.2, uninsured: 6.0, costOfLiving: 115.4 },
-    "25": { name: "Massachusetts", abbr: "MA", population: 7029917, density: 907.8, growth: 0.4, medianIncome: 84385, unemployment: 3.9, crimeRate: 309, violentCrime: 309, propertyCrime: 1131, gradRate: 89.1, perPupil: 19351, avgTemp: 47.9, precip: 47.7, aqi: 34, disasters: 14, broadband: 92.1, uninsured: 3.0, costOfLiving: 131.6 },
-    "26": { name: "Michigan", abbr: "MI", population: 10077331, density: 178.9, growth: -0.1, medianIncome: 59234, unemployment: 4.4, crimeRate: 477, violentCrime: 477, propertyCrime: 1522, gradRate: 82.4, perPupil: 12949, avgTemp: 44.4, precip: 33.5, aqi: 40, disasters: 22, broadband: 84.5, uninsured: 5.8, costOfLiving: 89.4 },
-    "27": { name: "Minnesota", abbr: "MN", population: 5706494, density: 72.0, growth: 0.3, medianIncome: 74593, unemployment: 2.9, crimeRate: 282, violentCrime: 282, propertyCrime: 2088, gradRate: 83.8, perPupil: 14028, avgTemp: 41.2, precip: 28.9, aqi: 34, disasters: 22, broadband: 87.8, uninsured: 4.5, costOfLiving: 97.3 },
-    "28": { name: "Mississippi", abbr: "MS", population: 2961279, density: 63.5, growth: -0.5, medianIncome: 45081, unemployment: 3.9, crimeRate: 291, violentCrime: 291, propertyCrime: 1924, gradRate: 85.3, perPupil: 9567, avgTemp: 63.4, precip: 57.4, aqi: 38, disasters: 40, broadband: 72.0, uninsured: 12.3, costOfLiving: 84.8 },
-    "29": { name: "Missouri", abbr: "MO", population: 6154913, density: 90.0, growth: 0.0, medianIncome: 57409, unemployment: 3.2, crimeRate: 543, violentCrime: 543, propertyCrime: 2646, gradRate: 89.2, perPupil: 12322, avgTemp: 54.5, precip: 42.2, aqi: 42, disasters: 38, broadband: 82.3, uninsured: 9.5, costOfLiving: 89.5 },
-    "30": { name: "Montana", abbr: "MT", population: 1084225, density: 7.5, growth: 0.8, medianIncome: 57153, unemployment: 2.9, crimeRate: 430, violentCrime: 430, propertyCrime: 2312, gradRate: 86.7, perPupil: 12482, avgTemp: 42.7, precip: 15.3, aqi: 38, disasters: 18, broadband: 77.3, uninsured: 8.7, costOfLiving: 95.7 },
-    "31": { name: "Nebraska", abbr: "NE", population: 1961504, density: 25.5, growth: 0.3, medianIncome: 63229, unemployment: 2.1, crimeRate: 318, violentCrime: 318, propertyCrime: 2078, gradRate: 89.1, perPupil: 13437, avgTemp: 48.8, precip: 26.4, aqi: 32, disasters: 30, broadband: 83.4, uninsured: 7.8, costOfLiving: 91.8 },
-    "32": { name: "Nevada", abbr: "NV", population: 3104614, density: 28.3, growth: 1.5, medianIncome: 60365, unemployment: 5.5, crimeRate: 460, violentCrime: 460, propertyCrime: 2167, gradRate: 82.6, perPupil: 10466, avgTemp: 53.1, precip: 10.0, aqi: 52, disasters: 12, broadband: 85.6, uninsured: 11.4, costOfLiving: 104.2 },
-    "33": { name: "New Hampshire", abbr: "NH", population: 1377529, density: 153.8, growth: 0.4, medianIncome: 77933, unemployment: 2.5, crimeRate: 147, violentCrime: 147, propertyCrime: 1024, gradRate: 88.8, perPupil: 18370, avgTemp: 43.8, precip: 47.0, aqi: 28, disasters: 8, broadband: 88.1, uninsured: 5.9, costOfLiving: 112.5 },
-    "34": { name: "New Jersey", abbr: "NJ", population: 9288994, density: 1263.0, growth: 0.2, medianIncome: 85751, unemployment: 4.4, crimeRate: 195, violentCrime: 195, propertyCrime: 1149, gradRate: 91.0, perPupil: 21866, avgTemp: 52.7, precip: 47.1, aqi: 40, disasters: 16, broadband: 90.7, uninsured: 7.9, costOfLiving: 115.2 },
-    "35": { name: "New Mexico", abbr: "NM", population: 2117522, density: 17.5, growth: 0.2, medianIncome: 51243, unemployment: 4.9, crimeRate: 832, violentCrime: 832, propertyCrime: 3425, gradRate: 74.9, perPupil: 12090, avgTemp: 53.4, precip: 14.6, aqi: 40, disasters: 18, broadband: 78.5, uninsured: 11.3, costOfLiving: 94.1 },
-    "36": { name: "New York", abbr: "NY", population: 20201249, density: 428.7, growth: -1.6, medianIncome: 71117, unemployment: 4.5, crimeRate: 364, violentCrime: 364, propertyCrime: 1392, gradRate: 84.1, perPupil: 26571, avgTemp: 45.4, precip: 46.2, aqi: 40, disasters: 28, broadband: 88.5, uninsured: 5.7, costOfLiving: 139.1 },
-    "37": { name: "North Carolina", abbr: "NC", population: 10439388, density: 218.1, growth: 0.9, medianIncome: 56642, unemployment: 3.5, crimeRate: 377, violentCrime: 377, propertyCrime: 2225, gradRate: 86.5, perPupil: 10525, avgTemp: 59.0, precip: 49.7, aqi: 40, disasters: 30, broadband: 83.4, uninsured: 11.1, costOfLiving: 95.8 },
-    "38": { name: "North Dakota", abbr: "ND", population: 779094, density: 11.3, growth: -0.1, medianIncome: 65315, unemployment: 2.1, crimeRate: 315, violentCrime: 315, propertyCrime: 2128, gradRate: 87.5, perPupil: 14252, avgTemp: 40.4, precip: 18.6, aqi: 26, disasters: 22, broadband: 82.7, uninsured: 7.5, costOfLiving: 93.1 },
-    "39": { name: "Ohio", abbr: "OH", population: 11799448, density: 290.5, growth: -0.2, medianIncome: 56602, unemployment: 4.0, crimeRate: 308, violentCrime: 308, propertyCrime: 2074, gradRate: 85.2, perPupil: 13750, avgTemp: 50.7, precip: 39.1, aqi: 42, disasters: 25, broadband: 85.2, uninsured: 6.5, costOfLiving: 90.8 },
-    "40": { name: "Oklahoma", abbr: "OK", population: 3959353, density: 58.0, growth: 0.0, medianIncome: 52919, unemployment: 3.0, crimeRate: 458, violentCrime: 458, propertyCrime: 2807, gradRate: 85.9, perPupil: 9301, avgTemp: 59.6, precip: 36.5, aqi: 42, disasters: 42, broadband: 77.1, uninsured: 14.3, costOfLiving: 86.6 },
-    "41": { name: "Oregon", abbr: "OR", population: 4237256, density: 44.1, growth: 0.4, medianIncome: 65667, unemployment: 3.9, crimeRate: 292, violentCrime: 292, propertyCrime: 2895, gradRate: 80.6, perPupil: 13231, avgTemp: 48.4, precip: 27.4, aqi: 48, disasters: 20, broadband: 87.5, uninsured: 6.2, costOfLiving: 110.7 },
-    "42": { name: "Pennsylvania", abbr: "PA", population: 13002700, density: 291.9, growth: -0.2, medianIncome: 63627, unemployment: 4.5, crimeRate: 306, violentCrime: 306, propertyCrime: 1325, gradRate: 87.8, perPupil: 17745, avgTemp: 48.8, precip: 42.7, aqi: 42, disasters: 22, broadband: 86.3, uninsured: 5.5, costOfLiving: 101.7 },
-    "44": { name: "Rhode Island", abbr: "RI", population: 1097379, density: 1061.4, growth: 0.1, medianIncome: 67167, unemployment: 4.2, crimeRate: 205, violentCrime: 205, propertyCrime: 1324, gradRate: 84.0, perPupil: 17429, avgTemp: 50.1, precip: 49.0, aqi: 32, disasters: 8, broadband: 89.6, uninsured: 4.1, costOfLiving: 105.4 },
-    "45": { name: "South Carolina", abbr: "SC", population: 5118425, density: 172.2, growth: 1.1, medianIncome: 54864, unemployment: 3.4, crimeRate: 530, violentCrime: 530, propertyCrime: 2656, gradRate: 81.8, perPupil: 12009, avgTemp: 62.4, precip: 49.8, aqi: 38, disasters: 25, broadband: 80.8, uninsured: 10.7, costOfLiving: 95.5 },
-    "46": { name: "South Dakota", abbr: "SD", population: 886667, density: 11.7, growth: 0.4, medianIncome: 59533, unemployment: 2.4, crimeRate: 501, violentCrime: 501, propertyCrime: 1692, gradRate: 84.1, perPupil: 11440, avgTemp: 45.2, precip: 21.4, aqi: 30, disasters: 24, broadband: 80.6, uninsured: 9.8, costOfLiving: 92.5 },
-    "47": { name: "Tennessee", abbr: "TN", population: 6910840, density: 168.2, growth: 0.5, medianIncome: 54833, unemployment: 3.4, crimeRate: 673, violentCrime: 673, propertyCrime: 2541, gradRate: 89.8, perPupil: 10649, avgTemp: 57.6, precip: 53.5, aqi: 44, disasters: 38, broadband: 81.7, uninsured: 10.3, costOfLiving: 89.9 },
-    "48": { name: "Texas", abbr: "TX", population: 29145505, density: 111.6, growth: 1.3, medianIncome: 63826, unemployment: 3.9, crimeRate: 422, violentCrime: 422, propertyCrime: 2423, gradRate: 89.7, perPupil: 11186, avgTemp: 65.8, precip: 28.9, aqi: 50, disasters: 78, broadband: 83.8, uninsured: 17.3, costOfLiving: 91.5 },
-    "49": { name: "Utah", abbr: "UT", population: 3271616, density: 39.9, growth: 1.6, medianIncome: 74197, unemployment: 2.3, crimeRate: 233, violentCrime: 233, propertyCrime: 2640, gradRate: 87.6, perPupil: 8754, avgTemp: 48.6, precip: 16.5, aqi: 52, disasters: 12, broadband: 89.3, uninsured: 9.6, costOfLiving: 99.7 },
-    "50": { name: "Vermont", abbr: "VT", population: 643077, density: 69.8, growth: -0.3, medianIncome: 61973, unemployment: 2.5, crimeRate: 173, violentCrime: 173, propertyCrime: 1211, gradRate: 89.6, perPupil: 21478, avgTemp: 42.9, precip: 42.7, aqi: 24, disasters: 10, broadband: 83.8, uninsured: 4.5, costOfLiving: 113.5 },
-    "51": { name: "Virginia", abbr: "VA", population: 8631393, density: 218.6, growth: 0.3, medianIncome: 76398, unemployment: 2.9, crimeRate: 208, violentCrime: 208, propertyCrime: 1468, gradRate: 88.9, perPupil: 14024, avgTemp: 55.1, precip: 43.3, aqi: 38, disasters: 22, broadband: 88.2, uninsured: 7.7, costOfLiving: 103.7 },
-    "53": { name: "Washington", abbr: "WA", population: 7614893, density: 115.9, growth: 1.0, medianIncome: 77006, unemployment: 3.8, crimeRate: 321, violentCrime: 321, propertyCrime: 2992, gradRate: 82.9, perPupil: 14189, avgTemp: 48.3, precip: 38.4, aqi: 44, disasters: 22, broadband: 90.0, uninsured: 6.1, costOfLiving: 110.7 },
-    "54": { name: "West Virginia", abbr: "WV", population: 1793716, density: 74.6, growth: -0.6, medianIncome: 46711, unemployment: 4.0, crimeRate: 316, violentCrime: 316, propertyCrime: 1321, gradRate: 90.5, perPupil: 13038, avgTemp: 52.3, precip: 44.2, aqi: 38, disasters: 22, broadband: 73.5, uninsured: 6.1, costOfLiving: 86.5 },
-    "55": { name: "Wisconsin", abbr: "WI", population: 5893718, density: 109.2, growth: 0.1, medianIncome: 63293, unemployment: 2.8, crimeRate: 314, violentCrime: 314, propertyCrime: 1375, gradRate: 90.0, perPupil: 13242, avgTemp: 43.1, precip: 33.2, aqi: 34, disasters: 18, broadband: 86.1, uninsured: 5.3, costOfLiving: 95.2 },
-    "56": { name: "Wyoming", abbr: "WY", population: 576851, density: 5.9, growth: -0.3, medianIncome: 65003, unemployment: 3.8, crimeRate: 212, violentCrime: 212, propertyCrime: 1603, gradRate: 81.6, perPupil: 17228, avgTemp: 42.0, precip: 13.1, aqi: 28, disasters: 12, broadband: 78.4, uninsured: 11.9, costOfLiving: 95.0 },
-};
+let STATE_DATA = null; // Will be populated by the backend API
 
 
 // ============================================================
@@ -165,10 +113,32 @@ const appState = {
 // INITIALIZATION
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    await fetchStateData();
     initMap();
     initEventListeners();
 });
+
+async function fetchStateData() {
+    try {
+        const response = await fetch("/api/data/all");
+        const json = await response.json();
+        if (json.status === "ok") {
+            STATE_DATA = json.data;
+        } else {
+            throw new Error(json.message);
+        }
+    } catch (err) {
+        console.error("Failed to fetch state data:", err);
+        const subtitle = document.querySelector(".loading-subtitle");
+        if (subtitle) {
+            subtitle.textContent = "Failed to load real data. Please check backend.";
+            subtitle.style.color = "#f43f5e";
+        }
+        // Fallback to empty object so map doesn't crash completely
+        STATE_DATA = {};
+    }
+}
 
 
 // ============================================================
