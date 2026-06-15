@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive data visualization map of the United States — explore crime, weather, education, economics, and more across every state and county.">
+    <title>USA Data Map — Interactive State & County Explorer</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- MapLibre GL JS -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+    <!-- D3.js for data viz -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+    <!-- TopoJSON client (for converting TopoJSON → GeoJSON) -->
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                    <circle cx="24" cy="24" r="22" stroke="url(#grad)" stroke-width="2" fill="none" opacity="0.3"/>
+                    <circle cx="24" cy="24" r="16" stroke="url(#grad)" stroke-width="2" fill="none" opacity="0.5"/>
+                    <circle cx="24" cy="24" r="10" stroke="url(#grad)" stroke-width="2" fill="none" opacity="0.7"/>
+                    <circle cx="24" cy="24" r="4" fill="url(#grad)"/>
+                    <defs>
+                        <linearGradient id="grad" x1="0" y1="0" x2="48" y2="48">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#06b6d4"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1 class="loading-title">USA Data Map</h1>
+            <p class="loading-subtitle">Loading map data...</p>
+            <div class="loading-bar">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Layout -->
+    <div id="app" class="app">
+        <!-- Top Navigation Bar -->
+        <header id="top-bar" class="top-bar">
+            <div class="top-bar-left">
+                <div class="logo">
+                    <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="22" stroke="url(#logoGrad)" stroke-width="2.5" fill="none" opacity="0.4"/>
+                        <circle cx="24" cy="24" r="14" stroke="url(#logoGrad)" stroke-width="2" fill="none" opacity="0.6"/>
+                        <circle cx="24" cy="24" r="6" fill="url(#logoGrad)"/>
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#06b6d4"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="logo-text">USA Data Map</span>
+                </div>
+            </div>
+
+            <div class="top-bar-center">
+                <div id="search-container" class="search-container">
+                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                    </svg>
+                    <input id="search-input" type="text" class="search-input" placeholder="Search states, counties...">
+                    <div id="search-results" class="search-results hidden"></div>
+                </div>
+            </div>
+
+            <div class="top-bar-right">
+                <button id="btn-compare" class="btn-icon" title="Compare Mode">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="8" height="18" rx="2"/><rect x="14" y="3" width="8" height="18" rx="2"/>
+                    </svg>
+                </button>
+                <button id="btn-reset" class="btn-icon" title="Reset View">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Map Container -->
+        <main class="map-wrapper">
+            <div id="map" class="map-container"></div>
+
+            <!-- Layer Selector (left sidebar) -->
+            <aside id="layer-panel" class="layer-panel">
+                <div class="layer-panel-header">
+                    <h2 class="layer-panel-title">Data Layers</h2>
+                    <button id="btn-collapse-layers" class="btn-icon btn-sm" title="Collapse">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="layer-list">
+                    <button class="layer-btn active" data-layer="demographics" id="layer-demographics">
+                        <span class="layer-icon">👥</span>
+                        <span class="layer-label">Demographics</span>
+                    </button>
+                    <button class="layer-btn" data-layer="crime" id="layer-crime">
+                        <span class="layer-icon">🔫</span>
+                        <span class="layer-label">Crime</span>
+                    </button>
+                    <button class="layer-btn" data-layer="economics" id="layer-economics">
+                        <span class="layer-icon">💰</span>
+                        <span class="layer-label">Economics</span>
+                    </button>
+                    <button class="layer-btn" data-layer="weather" id="layer-weather">
+                        <span class="layer-icon">🌦️</span>
+                        <span class="layer-label">Weather</span>
+                    </button>
+                    <button class="layer-btn" data-layer="education" id="layer-education">
+                        <span class="layer-icon">🏫</span>
+                        <span class="layer-label">Education</span>
+                    </button>
+                    <button class="layer-btn" data-layer="healthcare" id="layer-healthcare">
+                        <span class="layer-icon">🏥</span>
+                        <span class="layer-label">Healthcare</span>
+                    </button>
+                    <button class="layer-btn" data-layer="environment" id="layer-environment">
+                        <span class="layer-icon">🌿</span>
+                        <span class="layer-label">Air Quality</span>
+                    </button>
+                    <button class="layer-btn" data-layer="disasters" id="layer-disasters">
+                        <span class="layer-icon">🌪️</span>
+                        <span class="layer-label">Disasters</span>
+                    </button>
+                    <button class="layer-btn" data-layer="infrastructure" id="layer-infrastructure">
+                        <span class="layer-icon">🌐</span>
+                        <span class="layer-label">Infrastructure</span>
+                    </button>
+                </div>
+
+                <!-- Metric selector (changes per layer) -->
+                <div class="metric-section">
+                    <h3 class="metric-title">Metric</h3>
+                    <select id="metric-select" class="metric-select">
+                        <option value="population">Population</option>
+                        <option value="density">Population Density</option>
+                        <option value="growth">Growth Rate</option>
+                    </select>
+                </div>
+
+                <!-- Legend -->
+                <div id="legend" class="legend">
+                    <h3 class="legend-title">Legend</h3>
+                    <div id="legend-gradient" class="legend-gradient"></div>
+                    <div class="legend-labels">
+                        <span id="legend-min">Low</span>
+                        <span id="legend-max">High</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Detail Panel (right sidebar) -->
+            <aside id="detail-panel" class="detail-panel hidden">
+                <div class="detail-header">
+                    <div class="detail-title-row">
+                        <h2 id="detail-title" class="detail-title">Select a state</h2>
+                        <button id="btn-close-detail" class="btn-icon btn-sm" title="Close">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="detail-subtitle" class="detail-subtitle"></p>
+                </div>
+
+                <div id="detail-stats" class="detail-stats">
+                    <!-- Stat cards populated by JS -->
+                </div>
+
+                <div id="detail-chart" class="detail-chart">
+                    <!-- D3 chart rendered here -->
+                </div>
+
+                <div id="detail-breakdown" class="detail-breakdown">
+                    <!-- Additional data breakdown -->
+                </div>
+            </aside>
+
+            <!-- Collapsed layer toggle (visible when panel is collapsed) -->
+            <button id="btn-expand-layers" class="btn-expand-layers hidden" title="Show Layers">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m9 18 6-6-6-6"/>
+                </svg>
+            </button>
+        </main>
+
+        <!-- Bottom Bar (breadcrumb + zoom info) -->
+        <footer id="bottom-bar" class="bottom-bar">
+            <div class="breadcrumb">
+                <span id="breadcrumb-content" class="breadcrumb-text">United States</span>
+            </div>
+            <div class="bottom-bar-right">
+                <span id="hover-info" class="hover-info"></span>
+                <span class="zoom-level">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/>
+                    </svg>
+                    <span id="zoom-display">4.0x</span>
+                </span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- App JS -->
+    <script src="/static/js/app.js" type="module"></script>
+</body>
+</html>
