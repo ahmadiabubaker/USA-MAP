@@ -87,6 +87,13 @@ const LAYERS = {
             broadband: { label: "Broadband Coverage", suffix: "%", format: "percent", colorScale: ["#0c4a6e", "#0369a1", "#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc"] },
         }
     },
+    overall: {
+        label: "Overall Score",
+        icon: "⭐",
+        metrics: {
+            qolScore: { label: "Quality of Life Score", suffix: "/100", format: "decimal", colorScale: ["#4c1d95", "#6d28d9", "#7c3aed", "#2563eb", "#059669", "#10b981"] },
+        }
+    },
 };
 
 
@@ -115,13 +122,14 @@ const appState = {
 
 document.addEventListener("DOMContentLoaded", async () => {
     await fetchStateData();
+    computeQoLScores();   // ← inject overall score into STATE_DATA
     initMap();
     initEventListeners();
 });
 
 async function fetchStateData() {
     try {
-        const response = await fetch("/api/data/all");
+        const response = await fetch("http://127.0.0.1:8000/api/data/all");
         const json = await response.json();
         if (json.status === "ok") {
             STATE_DATA = json.data;
@@ -138,6 +146,81 @@ async function fetchStateData() {
         // Fallback to empty object so map doesn't crash completely
         STATE_DATA = {};
     }
+}
+
+// ============================================================
+// QUALITY OF LIFE SCORE — Weighted composite formula
+// ============================================================
+
+/**
+ * Weights and direction for each metric.
+ * direction: 'asc'  → higher raw value = better score
+ *            'desc' → lower raw value  = better score
+ */
+const QOL_COMPONENTS = [
+    { key: "medianIncome",  label: "Median Income",       icon: "💰", weight: 0.18, direction: "asc"  },
+    { key: "crimeRate",    label: "Violent Crime",        icon: "🔫", weight: 0.18, direction: "desc" },
+    { key: "gradRate",     label: "Graduation Rate",      icon: "🏫", weight: 0.14, direction: "asc"  },
+    { key: "uninsured",    label: "Uninsured Rate",       icon: "🏥", weight: 0.12, direction: "desc" },
+    { key: "unemployment", label: "Unemployment",         icon: "📉", weight: 0.12, direction: "desc" },
+    { key: "costOfLiving", label: "Cost of Living",       icon: "🏠", weight: 0.10, direction: "desc" },
+    { key: "aqi",          label: "Air Quality (AQI)",    icon: "🌿", weight: 0.07, direction: "desc" },
+    { key: "disasters",    label: "Disaster Risk",        icon: "🌪️", weight: 0.05, direction: "desc" },
+    { key: "broadband",    label: "Broadband Coverage",   icon: "🌐", weight: 0.04, direction: "asc"  },
+];
+
+function computeQoLScores() {
+    if (!STATE_DATA || Object.keys(STATE_DATA).length === 0) return;
+
+    const fipsList = Object.keys(STATE_DATA);
+
+    // Pre-compute min/max for each component
+    const ranges = {};
+    QOL_COMPONENTS.forEach(({ key }) => {
+        const values = fipsList.map(f => STATE_DATA[f][key] ?? 0).filter(v => v > 0);
+        ranges[key] = {
+            min: Math.min(...values),
+            max: Math.max(...values),
+        };
+    });
+
+    // Compute score for each state
+    fipsList.forEach(fips => {
+        const d = STATE_DATA[fips];
+        let totalScore = 0;
+        const componentScores = {};
+
+        QOL_COMPONENTS.forEach(({ key, weight, direction }) => {
+            const val = d[key] ?? 0;
+            const { min, max } = ranges[key];
+            const span = max - min || 1;
+
+            // Normalize 0 → 1
+            let normalized = (val - min) / span;
+
+            // Flip if lower = better
+            if (direction === "desc") normalized = 1 - normalized;
+
+            // Clamp to [0, 1]
+            normalized = Math.max(0, Math.min(1, normalized));
+
+            componentScores[key] = Math.round(normalized * 100);
+            totalScore += normalized * weight;
+        });
+
+        d.qolScore = Math.round(totalScore * 100);
+        d._qolComponents = componentScores;
+    });
+
+    // Rank all states by score
+    const ranked = [...fipsList].sort((a, b) => STATE_DATA[b].qolScore - STATE_DATA[a].qolScore);
+    ranked.forEach((fips, i) => {
+        STATE_DATA[fips]._qolRank = i + 1;
+    });
+
+    console.log("QoL scores computed. Top 5:",
+        ranked.slice(0, 5).map(f => `${STATE_DATA[f].abbr}: ${STATE_DATA[f].qolScore}`).join(", ")
+    );
 }
 
 
@@ -821,7 +904,64 @@ function generateTrendData(currentValue, years) {
 function renderDetailBreakdown(data) {
     const container = document.getElementById("detail-breakdown");
 
-    // Show top-level breakdown bars for the current layer
+    // ── Special case: Overall Score layer ──────────────────────
+    if (appState.activeLayer === "overall" && data._qolComponents) {
+        const rank = data._qolRank;
+        const total = Object.keys(STATE_DATA).length;
+        const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
+
+        let html = `
+            <div class="breakdown-title">Score Breakdown <span style="float:right;font-size:0.75rem;color:var(--text-tertiary)">${medal} of ${total} states</span></div>
+            <div class="qol-score-hero">
+                <div class="qol-score-ring" style="--score: ${data.qolScore}">
+                    <svg viewBox="0 0 80 80" width="80" height="80">
+                        <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+                        <circle cx="40" cy="40" r="34" fill="none"
+                            stroke="url(#qolGrad)" stroke-width="7"
+                            stroke-linecap="round"
+                            stroke-dasharray="${Math.round(2 * Math.PI * 34)}"
+                            stroke-dashoffset="${Math.round(2 * Math.PI * 34 * (1 - data.qolScore / 100))}"
+                            transform="rotate(-90 40 40)"/>
+                        <defs>
+                            <linearGradient id="qolGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#10b981"/>
+                            </linearGradient>
+                        </defs>
+                        <text x="40" y="44" text-anchor="middle" font-size="18" font-weight="700" fill="#f1f5f9" font-family="Inter,sans-serif">${data.qolScore}</text>
+                    </svg>
+                </div>
+                <div class="qol-score-label">Quality of Life Score</div>
+            </div>
+        `;
+
+        QOL_COMPONENTS.forEach(({ key, label, icon, weight }) => {
+            const compScore = data._qolComponents[key] ?? 0;
+            const color = compScore >= 70 ? "#10b981" : compScore >= 45 ? "#f59e0b" : "#ef4444";
+            html += `
+                <div class="breakdown-row">
+                    <span class="breakdown-label">${icon} ${label}</span>
+                    <div class="breakdown-bar-track">
+                        <div class="breakdown-bar-fill" style="width: ${compScore}%; background: ${color};"></div>
+                    </div>
+                    <span class="breakdown-value" style="color:${color}">${compScore}</span>
+                </div>
+                <div style="font-size:0.65rem;color:var(--text-tertiary);text-align:right;margin:-4px 0 6px;padding-right:2px">weight: ${Math.round(weight * 100)}%</div>
+            `;
+        });
+
+        container.innerHTML = html;
+        requestAnimationFrame(() => {
+            container.querySelectorAll(".breakdown-bar-fill").forEach((bar) => {
+                const w = bar.style.width;
+                bar.style.width = "0%";
+                requestAnimationFrame(() => { bar.style.width = w; });
+            });
+        });
+        return;
+    }
+
+    // ── Default: Quick Overview bars ───────────────────────────
     const breakdownItems = [
         { label: "Broadband Coverage", value: data.broadband, max: 100, color: "#06b6d4" },
         { label: "Graduation Rate", value: data.gradRate, max: 100, color: "#a855f7" },

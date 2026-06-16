@@ -123,7 +123,7 @@ async def fetch_census_data(api_key: str | None) -> dict:
 async def fetch_crime_data(api_key: str | None) -> dict:
     """
     Fetch crime estimates from FBI Crime Data Explorer API.
-    Returns dict keyed by FIPS with: crimeRate (violent per 100K), propertyCrime (per 100K)
+    Returns dict keyed by FIPS with: crimeRate (violent per 100K)
     """
     cache_key = "fbi_crime"
     cached = cache.get(cache_key)
@@ -137,54 +137,79 @@ async def fetch_crime_data(api_key: str | None) -> dict:
 
     result = {}
 
+    # FBI CDE API — uses /cde/summarized/ path (new as of 2024).
+    # Date format MUST be MM-YYYY (e.g. "01-2022"), NOT just a year.
+    from_date = "01-2021"
+    to_date   = "12-2022"
+
     async with httpx.AsyncClient(timeout=TIMEOUT, headers=HEADERS) as client:
-        # Fetch estimates for each state
-        # The FBI API returns data per state abbreviation
-        tasks = []
-        fips_list = []
         for fips, (name, abbr, lat, lng) in STATE_REF.items():
-            if fips == "11":  # DC uses a different path sometimes
+            if fips == "11":  # DC — skip, FBI data unreliable for DC
                 continue
-            tasks.append(
-                client.get(
-                    f"https://api.usa.gov/crime/fbi/sapi/api/estimates/states/{abbr}/2022",
-                    params={"API_KEY": api_key},
+            try:
+                violent_url = (
+                    f"https://api.usa.gov/crime/fbi/cde/summarized/state/{abbr}/violent-crime"
+                    f"?from={from_date}&to={to_date}&API_KEY={api_key}"
                 )
-            )
-            fips_list.append(fips)
+                prop_url = (
+                    f"https://api.usa.gov/crime/fbi/cde/summarized/state/{abbr}/property-crime"
+                    f"?from={from_date}&to={to_date}&API_KEY={api_key}"
+                )
 
-        try:
-            responses = await asyncio.gather(*tasks, return_exceptions=True)
+                violent_resp, prop_resp = await asyncio.gather(
+                    client.get(violent_url),
+                    client.get(prop_url),
+                    return_exceptions=True,
+                )
 
-            for fips, resp in zip(fips_list, responses):
-                if isinstance(resp, Exception):
-                    logger.warning(f"Crime data error for {fips}: {resp}")
-                    continue
-                try:
-                    resp.raise_for_status()
-                    data = resp.json()
-                    # The API returns a list of yearly results
-                    if isinstance(data, list) and len(data) > 0:
-                        latest = data[-1]  # most recent year
-                        pop = latest.get("population", 1)
-                        violent = latest.get("violent_crime", 0)
-                        prop = latest.get("property_crime", 0)
-                        result[fips] = {
-                            "crimeRate": round((violent / pop) * 100000, 1) if pop else 0,
-                            "violentCrime": round((violent / pop) * 100000, 1) if pop else 0,
-                            "propertyCrime": round((prop / pop) * 100000, 1) if pop else 0,
-                        }
-                except Exception as e:
-                    logger.warning(f"Crime parse error for {fips}: {e}")
+                violent_rate = _avg_monthly_rate(violent_resp)
+                prop_rate    = _avg_monthly_rate(prop_resp)
 
-            logger.info(f"FBI Crime: fetched data for {len(result)} states")
+                if violent_rate is not None or prop_rate is not None:
+                    result[fips] = {
+                        "crimeRate":     round(violent_rate or 0, 1),
+                        "violentCrime":  round(violent_rate or 0, 1),
+                        "propertyCrime": round(prop_rate or 0, 1),
+                    }
 
-        except Exception as e:
-            logger.error(f"FBI Crime batch error: {e}")
+                # Be polite to the API
+                await asyncio.sleep(0.15)
+
+            except Exception as e:
+                logger.warning(f"Crime fetch error for {abbr} ({fips}): {e}")
+
+    logger.info(f"FBI Crime: fetched data for {len(result)} states")
 
     if result:
         cache.set(cache_key, result)
     return result
+
+
+def _avg_monthly_rate(resp) -> float | None:
+    """
+    Parse a CDE summarized response and return the average monthly rate per 100K.
+    Response shape:
+      {"offenses": {"rates": {"<State> Offenses": {"MM-YYYY": <rate>, ...}}}}
+    """
+    try:
+        if isinstance(resp, Exception):
+            return None
+        resp.raise_for_status()
+        data = resp.json()
+        rates_dict = data.get("offenses", {}).get("rates", {})
+        # Key is like "Alabama Offenses" — grab the first dict value
+        monthly_values = None
+        for val in rates_dict.values():
+            if isinstance(val, dict):
+                monthly_values = val
+                break
+        if not monthly_values:
+            return None
+        values = [v for v in monthly_values.values() if isinstance(v, (int, float)) and v >= 0]
+        return round(sum(values) / len(values), 1) if values else None
+    except Exception:
+        return None
+
 
 
 # ============================================================
