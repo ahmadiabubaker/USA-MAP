@@ -128,22 +128,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function fetchStateData() {
+    // ── Environment detection ──────────────────────────────────────
+    // On GitHub Pages (or any static host) there is no backend.
+    // We load the pre-generated states.json instead.
+    // In local dev (localhost / 127.0.0.1) we hit the FastAPI server.
+    const isLocalDev = ["localhost", "127.0.0.1"].includes(location.hostname);
+    const DATA_URL   = isLocalDev
+        ? "http://127.0.0.1:8000/api/data/all"
+        : "./data/states.json";
+
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/data/all");
+        const response = await fetch(DATA_URL);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const json = await response.json();
-        if (json.status === "ok") {
+
+        // Both the API response and states.json use the same shape:
+        // { status?: "ok", data: { [fips]: {...} } }
+        if (json.data) {
             STATE_DATA = json.data;
         } else {
-            throw new Error(json.message);
+            throw new Error("Unexpected response shape");
         }
     } catch (err) {
         console.error("Failed to fetch state data:", err);
         const subtitle = document.querySelector(".loading-subtitle");
         if (subtitle) {
-            subtitle.textContent = "Failed to load real data. Please check backend.";
+            subtitle.textContent = isLocalDev
+                ? "Failed to load data. Is the backend running? (python -m uvicorn app.main:app)"
+                : "Failed to load data. The data file may not have been generated yet.";
             subtitle.style.color = "#f43f5e";
         }
-        // Fallback to empty object so map doesn't crash completely
         STATE_DATA = {};
     }
 }
